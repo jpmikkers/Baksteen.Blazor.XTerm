@@ -3,10 +3,40 @@
 
 <PageTitle>Home</PageTitle>
 
-<BaksteenXTerm.Miep></BaksteenXTerm.Miep>
+<BaksteenXTerm.Miep @ref="_terminalRef"></BaksteenXTerm.Miep>
 
 <BaksteenXTerm.BlinkyBall></BaksteenXTerm.BlinkyBall>
 
-<h1>Hello, world!</h1>
+<button class="btn btn-primary" @onclick="DoWrite">Write</button>
+<button class="btn btn-primary" @onclick="DoClear">Clear</button>
+<button class="btn btn-primary" @onclick="DoReset">Reset</button>
 
-Welcome to your new app.
+@code {
+    private BaksteenXTerm.Miep? _terminalRef;
+
+    private async Task DoWrite()
+    {
+        if (_terminalRef is not null)
+        {
+            // include CRLF for xterm line break if desired
+            await _terminalRef.Write("Hello from Home\r\n");
+            await _terminalRef.Write("\x1b[31mRed \x1b[32mGreen \x1b[34mBlue\x1b[0m\r\n");
+        }
+    }
+
+    private async Task DoClear()
+    {
+        if(_terminalRef is not null)
+        {
+            await _terminalRef.Clear();
+        }
+    }
+
+    private async Task DoReset()
+    {
+        if(_terminalRef is not null)
+        {
+            await _terminalRef.Reset();
+        }
+    }
+}

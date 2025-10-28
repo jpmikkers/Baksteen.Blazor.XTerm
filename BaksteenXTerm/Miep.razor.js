@@ -1,21 +1,22 @@
 ﻿
-import { showPrompt } from './exampleJsInterop.js'; 
-import { Terminal } from './js/xterm.js';
-//import "./css/xterm.css";
+import { Terminal } from './js/xterm.esm.js';
+import { FitAddon } from "./js/addon-fit.esm.js";
+import { WebLinksAddon } from './js/addon-web-links.esm.js';
 
 export function initTerminal() {
-    alert("Initializing terminal...");
-    showPrompt("Terminal is being initialized.");
-
     //const link = document.createElement("link");
     //link.rel = "stylesheet";
     //link.href = "./js/xterm.css";
     //document.head.appendChild(link);
 
-    const term = new Terminal();
-    term.open(document.getElementById('terminal'));
-    term.write('Welcome to xterm.js\r\n');
-    return term;
+    alert("Initializing terminal...");
+    const terminal = new Terminal();
+    terminal.loadAddon(new FitAddon());
+    terminal.loadAddon(new WebLinksAddon());
+    alert("addon installed...");
+    terminal.open(document.getElementById('terminal'));
+    terminal.write('Welcome to xterm.js see: http://www.github.com/\r\n');
+    return terminal;
 }
 
 export function getJsProperty(item,path) {

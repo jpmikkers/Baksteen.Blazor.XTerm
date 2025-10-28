@@ -2,10 +2,7 @@
 @implements IAsyncDisposable
 
 <link href="_content/BaksteenXTerm/css/xterm.css" rel="stylesheet" />
-
-<h1>Scoped CSS Example</h1>
-
-<div id="terminal" style="width: 100%; height: 300px;"></div>
+<div id="terminal"></div>
 
 @code {
     private IJSObjectReference? module;
@@ -50,6 +47,34 @@
             catch(JSDisconnectedException)
             {
             }
+        }
+    }
+
+    public async Task Write(string text)
+    {
+        if(terminal is not null)
+        {
+            await terminal.InvokeVoidAsync("write", text);
+        }
+    }
+
+    public async Task Clear()
+    {
+        if (terminal is not null)
+        {
+            // Call the xterm.js Terminal.clear() method via JS interop.
+            // If your xterm.js version does not expose `clear`, you can
+            // alternatively use `reset` or write an ANSI clear sequence.
+            await terminal.InvokeVoidAsync("clear");
+        }
+    }
+
+    public async Task Reset()
+    {
+        if (terminal is not null)
+        {
+            // Try calling the JS `reset` method on the Terminal instance.
+            await terminal.InvokeVoidAsync("reset");
         }
     }
 }
