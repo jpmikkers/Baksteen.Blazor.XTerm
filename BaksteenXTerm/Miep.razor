@@ -5,36 +5,58 @@
 <div id="terminal"></div>
 
 @code {
+    private DotNetObjectReference<Miep>? _dotNetRef;
+
     private IJSObjectReference? module;
     private IJSObjectReference? terminal;
     private string? result;
+
+    public class KeyEventPayload
+    {
+        public string Key { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public bool Ctrl { get; set; }
+        public bool Alt { get; set; }
+        public bool Shift { get; set; }
+        public bool Meta { get; set; }
+    }
+
+    [JSInvokable]
+    public async Task OnTerminalData(string data)
+    {
+        if(terminal is not null)
+        {
+            await Write($"got data {data}");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnTerminalKey(KeyEventPayload e)
+    {
+        if(terminal is not null)
+        {
+            await Write($"got key {e}");
+        }
+    }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
         if(firstRender)
         {
+            _dotNetRef = DotNetObjectReference.Create(this);
+
             /*
-                Change the {PATH} placeholder in the next line to the path of
-                the collocated JS file in the app. Examples:
+            Change the {PATH} placeholder in the next line to the path of
+            the collocated JS file in the app. Examples:
 
                 ./Components/Pages/JsCollocation2.razor.js (.NET 8 or later)
                 ./Pages/JsCollocation2.razor.js (.NET 7 or earlier)
             */
             //module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./{PATH}/JsCollocation2.razor.js");
             module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/BaksteenXTerm/Miep.razor.js");
-            terminal = await module.InvokeAsync<IJSObjectReference>("initTerminal");
+            terminal = await module.InvokeAsync<IJSObjectReference>("initTerminal", "terminal", _dotNetRef);
         }
     }
-
-    // public async Task ShowPrompt()
-    // {
-    //     if(module is not null)
-    //     {
-    //         result = await module.InvokeAsync<string>(
-    //             "showPrompt2", "What's your name?");
-    //         StateHasChanged();
-    //     }
-    // }
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
@@ -52,29 +74,23 @@
 
     public async Task Write(string text)
     {
-        if(terminal is not null)
-        {
-            await terminal.InvokeVoidAsync("write", text);
-        }
+        if(terminal is null) return;
+        await terminal.InvokeVoidAsync("write", text);
     }
 
     public async Task Clear()
     {
-        if (terminal is not null)
-        {
-            // Call the xterm.js Terminal.clear() method via JS interop.
-            // If your xterm.js version does not expose `clear`, you can
-            // alternatively use `reset` or write an ANSI clear sequence.
-            await terminal.InvokeVoidAsync("clear");
-        }
+        if(terminal is null) return;
+        // Call the xterm.js Terminal.clear() method via JS interop.
+        // If your xterm.js version does not expose `clear`, you can
+        // alternatively use `reset` or write an ANSI clear sequence.
+        await terminal.InvokeVoidAsync("clear");
     }
 
     public async Task Reset()
     {
-        if (terminal is not null)
-        {
-            // Try calling the JS `reset` method on the Terminal instance.
-            await terminal.InvokeVoidAsync("reset");
-        }
+        if(terminal is null) return;
+        // Try calling the JS `reset` method on the Terminal instance.
+        await terminal.InvokeVoidAsync("reset");
     }
 }

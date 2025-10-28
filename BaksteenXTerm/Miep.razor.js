@@ -3,7 +3,17 @@ import { Terminal } from './js/xterm.esm.js';
 import { FitAddon } from "./js/addon-fit.esm.js";
 import { WebLinksAddon } from './js/addon-web-links.esm.js';
 
-export function initTerminal() {
+export function initXterm(containerId, dotNetRef) {
+    const term = new Terminal();
+    term.open(document.getElementById(containerId));
+
+    term.onData(data => {
+        // Send the data back to .NET
+        dotNetRef.invokeMethodAsync("OnTerminalData", data);
+    });
+}
+
+export function initTerminal(containerId, dotNetRef) {
     //const link = document.createElement("link");
     //link.rel = "stylesheet";
     //link.href = "./js/xterm.css";
@@ -14,8 +24,53 @@ export function initTerminal() {
     terminal.loadAddon(new FitAddon());
     terminal.loadAddon(new WebLinksAddon());
     alert("addon installed...");
-    terminal.open(document.getElementById('terminal'));
+    terminal.open(document.getElementById(containerId));
     terminal.write('Welcome to xterm.js see: http://www.github.com/\r\n');
+
+    //    const { key, domEvent } = e;
+    //    terminal.write("Key pressed:" + key + "Event:" + domEvent);
+    // Example: intercept Ctrl+C
+    //    if (domEvent.ctrlKey && key === "c") {
+    //        console.log("Ctrl+C detected!");
+    //        domEvent.preventDefault();
+    //    }
+    //});
+
+    // Listen for key presses
+    //const disposable = terminal.onKey(e => {
+    //    const { key, domEvent } = e;
+    //    terminal.write("Key pressed:" + key + "Event:" + domEvent);
+    // Example: intercept Ctrl+C
+    //    if (domEvent.ctrlKey && key === "c") {
+    //        console.log("Ctrl+C detected!");
+    //        domEvent.preventDefault();
+    //    }
+    //});
+
+    // Listen for key presses
+    const disposable = terminal.onKey(e => {
+        const { key, domEvent } = e;
+
+        // Create a serializable object
+        const payload = {
+            key: key,
+            code: domEvent.code,
+            ctrl: domEvent.ctrlKey,
+            alt: domEvent.altKey,
+            shift: domEvent.shiftKey,
+            meta: domEvent.metaKey
+        };
+        dotNetRef.invokeMethodAsync("OnTerminalKey", payload);
+    });
+
+    terminal.onData(data => {
+        // Send the data back to .NET
+        dotNetRef.invokeMethodAsync("OnTerminalData", data);
+    });
+
+    // Later, unsubscribe if needed
+    // disposable.dispose();
+
     return terminal;
 }
 
