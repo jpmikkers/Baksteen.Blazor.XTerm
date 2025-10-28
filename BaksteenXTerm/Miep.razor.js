@@ -19,12 +19,15 @@ export function initTerminal(containerId, dotNetRef) {
     //link.href = "./js/xterm.css";
     //document.head.appendChild(link);
 
-    alert("Initializing terminal...");
+    //alert("Initializing terminal...");
     const terminal = new Terminal();
-    terminal.loadAddon(new FitAddon());
+    const fitAddon = new FitAddon();
+    terminal.loadAddon(fitAddon);
     terminal.loadAddon(new WebLinksAddon());
-    alert("addon installed...");
+    //alert("addon installed...");
     terminal.open(document.getElementById(containerId));
+    fitAddon.fit();
+
     terminal.write('Welcome to xterm.js see: http://www.github.com/\r\n');
 
     //    const { key, domEvent } = e;
