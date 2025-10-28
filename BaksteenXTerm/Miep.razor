@@ -2,9 +2,18 @@
 @implements IAsyncDisposable
 
 <link href="_content/BaksteenXTerm/css/xterm.css" rel="stylesheet" />
-<div id="terminal"></div>
+<div id="@_resolvedId"></div>
 
 @code {
+
+    [Parameter] public string? Id { get; set; }
+    private string _resolvedId = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        _resolvedId = Id ?? $"xterm-{Guid.NewGuid()}";
+    }
+
     private DotNetObjectReference<Miep>? _dotNetRef;
 
     private IJSObjectReference? module;
@@ -54,7 +63,7 @@
             */
             //module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./{PATH}/JsCollocation2.razor.js");
             module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/BaksteenXTerm/Miep.razor.js");
-            terminal = await module.InvokeAsync<IJSObjectReference>("initTerminal", "terminal", _dotNetRef);
+            terminal = await module.InvokeAsync<IJSObjectReference>("initTerminal", _resolvedId, _dotNetRef);
         }
     }
 
