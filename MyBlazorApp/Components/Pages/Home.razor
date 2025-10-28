@@ -12,6 +12,8 @@
 <button class="btn btn-primary" @onclick="DoWrite">Write</button>
 <button class="btn btn-primary" @onclick="DoClear">Clear</button>
 <button class="btn btn-primary" @onclick="DoReset">Reset</button>
+<button class="btn btn-primary" @onclick="DoBlur">Blur</button>
+<button class="btn btn-primary" @onclick="DoFocus">Focus</button>
 
 @code {
     private BaksteenXTerm.Miep? _terminalRef;
@@ -39,6 +41,22 @@
         if(_terminalRef is not null)
         {
             await _terminalRef.Reset();
+        }
+    }
+
+    private async Task DoBlur()
+    {
+        if(_terminalRef is not null)
+        {
+            await _terminalRef.Blur();
+        }
+    }
+
+    private async Task DoFocus()
+    {
+        if(_terminalRef is not null)
+        {
+            await _terminalRef.Focus();
         }
     }
 }

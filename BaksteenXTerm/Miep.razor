@@ -18,7 +18,6 @@
 
     private IJSObjectReference? module;
     private IJSObjectReference? terminal;
-    private string? result;
 
     public class KeyEventPayload
     {
@@ -101,5 +100,17 @@
         if(terminal is null) return;
         // Try calling the JS `reset` method on the Terminal instance.
         await terminal.InvokeVoidAsync("reset");
+    }
+
+    public async Task Blur()
+    {
+        if(terminal is null) return;
+        await terminal.InvokeVoidAsync("blur");
+    }
+
+    public async Task Focus()
+    {
+        if(terminal is null) return;
+        await terminal.InvokeVoidAsync("focus");
     }
 }
