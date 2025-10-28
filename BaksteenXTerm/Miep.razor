@@ -1,0 +1,55 @@
+﻿@inject IJSRuntime jsRuntime
+@implements IAsyncDisposable
+
+<link href="_content/BaksteenXTerm/css/xterm.css" rel="stylesheet" />
+
+<h1>Scoped CSS Example</h1>
+
+<div id="terminal" style="width: 100%; height: 300px;"></div>
+
+@code {
+    private IJSObjectReference? module;
+    private IJSObjectReference? terminal;
+    private string? result;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+            /*
+                Change the {PATH} placeholder in the next line to the path of
+                the collocated JS file in the app. Examples:
+
+                ./Components/Pages/JsCollocation2.razor.js (.NET 8 or later)
+                ./Pages/JsCollocation2.razor.js (.NET 7 or earlier)
+            */
+            //module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./{PATH}/JsCollocation2.razor.js");
+            module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/BaksteenXTerm/Miep.razor.js");
+            terminal = await module.InvokeAsync<IJSObjectReference>("initTerminal");
+        }
+    }
+
+    // public async Task ShowPrompt()
+    // {
+    //     if(module is not null)
+    //     {
+    //         result = await module.InvokeAsync<string>(
+    //             "showPrompt2", "What's your name?");
+    //         StateHasChanged();
+    //     }
+    // }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if(module is not null)
+        {
+            try
+            {
+                await module.DisposeAsync();
+            }
+            catch(JSDisconnectedException)
+            {
+            }
+        }
+    }
+}

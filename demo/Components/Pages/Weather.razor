@@ -1,0 +1,103 @@
+﻿@inject IJSRuntime JS
+@page "/weather"
+
+<PageTitle>Weather</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Weather forecast</MudText>
+<MudText Typo="Typo.body1" Class="mb-8">This component demonstrates fetching data from the server.</MudText>
+<MudButton @onclick="DoClear">Clear</MudButton>
+
+<div id="terminal" style="width: 100%; height: 300px;"></div>
+
+@* <HeadContent>
+    <script>
+        alert("Loading terminal...");
+        var term = new Terminal();
+        alert("after new terminal...");
+        term.open(document.getElementById('terminal'));
+        alert("after open terminal...");
+        term.write('Hello from \x1B[1;3;31mxterm.js\x1B[0m $ ')
+    </script>
+</HeadContent>
+ *@
+@if (forecasts == null)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+  <MudTable Items="forecasts" Hover="true" SortLabel="Sort By" Elevation="0" AllowUnsorted="false">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<WeatherForecast, object>(x=>x.Date)">Date</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<WeatherForecast, object>(x=>x.TemperatureC)">Temp. (C)</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<WeatherForecast, object>(x=>x.TemperatureF)">Temp. (F)</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<WeatherForecast, object>(x=>x.Summary!)">Summary</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Date">@context.Date</MudTd>
+            <MudTd DataLabel="Temp. (C)">@context.TemperatureC</MudTd>
+            <MudTd DataLabel="Temp. (F)">@context.TemperatureF</MudTd>
+            <MudTd DataLabel="Summary">@context.Summary</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[]{50, 100}" />
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+
+
+
+
+
+
+
+    private IJSObjectReference? module;
+    private IJSObjectReference? terminal;
+
+    private WeatherForecast[]? forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate asynchronous loading to demonstrate a loading indicator
+        await Task.Delay(500);
+
+        var startDate = DateOnly.FromDateTime(DateTime.Now);
+        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
+        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        {
+            Date = startDate.AddDays(index),
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary = summaries[Random.Shared.Next(summaries.Length)]
+        }).ToArray();
+    }
+
+    private class WeatherForecast
+    {
+        public DateOnly Date { get; set; }
+        public int TemperatureC { get; set; }
+        public string? Summary { get; set; }
+        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/terminal.js");
+            terminal = await module.InvokeAsync<IJSObjectReference>("initTerminal");
+            await terminal.InvokeVoidAsync("write", "Welcome 2 to the xterm.js terminal!\r\n");
+            await terminal.InvokeVoidAsync("write", "\x1b[31mRed \x1b[32mGreen \x1b[34mBlue\x1b[0m\r\n");
+            var testje = await module.InvokeAsync<IJSObjectReference>("getJsProperty", terminal, "options");
+        }
+    }
+
+    private async Task DoClear(MouseEventArgs args)
+    {
+        if(terminal is not null)
+        {
+            await terminal.InvokeVoidAsync("clear");
+        }
+    }
+}
