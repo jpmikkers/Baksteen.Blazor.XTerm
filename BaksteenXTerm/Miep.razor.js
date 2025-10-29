@@ -3,29 +3,16 @@ import { Terminal } from './js/xterm.esm.js';
 import { FitAddon } from "./js/addon-fit.esm.js";
 import { WebLinksAddon } from './js/addon-web-links.esm.js';
 
-export function initXterm(containerId, dotNetRef) {
-    const term = new Terminal();
-    term.open(document.getElementById(containerId));
-
-    term.onData(data => {
-        // Send the data back to .NET
-        dotNetRef.invokeMethodAsync("OnTerminalData", data);
-    });
-}
-
-export function initTerminal(containerId, dotNetRef) {
-    //const link = document.createElement("link");
-    //link.rel = "stylesheet";
-    //link.href = "./js/xterm.css";
-    //document.head.appendChild(link);
+export function initTerminal(elementRef, dotNetRef) {
 
     //alert("Initializing terminal...");
     const terminal = new Terminal();
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
     terminal.loadAddon(new WebLinksAddon());
-    //alert("addon installed...");
-    terminal.open(document.getElementById(containerId));
+
+    //terminal.open(document.getElementById(containerId));
+    terminal.open(elementRef);
     fitAddon.fit();
 
     terminal.write('Welcome to xterm.js see: http://www.github.com/\r\n');
