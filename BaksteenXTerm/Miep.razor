@@ -69,6 +69,18 @@
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
+        if(terminal is not null)
+        {
+            try
+            {
+                await terminal.DisposeAsync();
+            }
+            catch(JSDisconnectedException)
+            {
+            }
+            terminal = null;
+        }
+
         if(module is not null)
         {
             try
@@ -78,6 +90,7 @@
             catch(JSDisconnectedException)
             {
             }
+            module = null;
         }
     }
 
