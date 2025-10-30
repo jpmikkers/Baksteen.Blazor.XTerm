@@ -14,7 +14,7 @@
         _resolvedId = Id ?? $"xterm-{Guid.NewGuid()}";
     }
 
-    private DotNetObjectReference<Miep>? _dotNetRef;
+    private DotNetObjectReference<XTerm>? _dotNetRef;
     private ElementReference _terminalElementReference;
 
     private IJSObjectReference? module;
@@ -62,7 +62,7 @@
                 ./Pages/JsCollocation2.razor.js (.NET 7 or earlier)
             */
             //module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./{PATH}/JsCollocation2.razor.js");
-            module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/BaksteenXTerm/Miep.razor.js");
+            module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/BaksteenXTerm/XTerm.razor.js");
             terminal = await module.InvokeAsync<IJSObjectReference>("initTerminal", _terminalElementReference, _dotNetRef );
         }
     }

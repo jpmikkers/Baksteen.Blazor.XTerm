@@ -3,11 +3,9 @@
 
 <PageTitle>Home</PageTitle>
 
-<BaksteenXTerm.Miep @ref="_terminalRef"></BaksteenXTerm.Miep>
+<XTerm @ref="_terminalRef"></XTerm>
 
-<BaksteenXTerm.BlinkyBall></BaksteenXTerm.BlinkyBall>
-
-<BaksteenXTerm.Miep></BaksteenXTerm.Miep>
+<XTerm></XTerm>
 
 <button class="btn btn-primary" @onclick="DoWrite">Write</button>
 <button class="btn btn-primary" @onclick="DoClear">Clear</button>
@@ -16,7 +14,7 @@
 <button class="btn btn-primary" @onclick="DoFocus">Focus</button>
 
 @code {
-    private BaksteenXTerm.Miep? _terminalRef;
+    private XTerm? _terminalRef;
 
     private async Task DoWrite()
     {
