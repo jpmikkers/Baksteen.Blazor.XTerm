@@ -3,15 +3,14 @@
 
 <PageTitle>Home</PageTitle>
 
-<XTerm @ref="_terminalRef"></XTerm>
-
-<XTerm></XTerm>
-
 <button class="btn btn-primary" @onclick="DoWrite">Write</button>
 <button class="btn btn-primary" @onclick="DoClear">Clear</button>
 <button class="btn btn-primary" @onclick="DoReset">Reset</button>
 <button class="btn btn-primary" @onclick="DoBlur">Blur</button>
 <button class="btn btn-primary" @onclick="DoFocus">Focus</button>
+<button class="btn btn-primary" @onclick="DoFit">Fit</button>
+
+<XTerm @ref="_terminalRef"></XTerm>
 
 @code {
     private XTerm? _terminalRef;
@@ -23,6 +22,7 @@
             // include CRLF for xterm line break if desired
             await _terminalRef.Write("Hello from Home\r\n");
             await _terminalRef.Write("\x1b[31mRed \x1b[32mGreen \x1b[34mBlue\x1b[0m\r\n");
+            await _terminalRef.Write("pomfpowmecpo peocm wpoemcpwoepo ecwmpomwpowecp ecwpowemcpo mwepocmwepompwempowempwec pwoemcpweocmp wemwepom ecwpomwecpomwec pwmepocwepomcwepomwecpwepmc pc mpwecompweomcwep cemwpo\r\n");
         }
     }
 
@@ -55,6 +55,14 @@
         if(_terminalRef is not null)
         {
             await _terminalRef.Focus();
+        }
+    }
+
+    private async Task DoFit()
+    {
+        if(_terminalRef is not null)
+        {
+            await _terminalRef.Fit();
         }
     }
 }
