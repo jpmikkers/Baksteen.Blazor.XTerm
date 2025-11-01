@@ -9,6 +9,8 @@
 <button class="btn btn-primary" @onclick="DoBlur">Blur</button>
 <button class="btn btn-primary" @onclick="DoFocus">Focus</button>
 <button class="btn btn-primary" @onclick="DoFit">Fit</button>
+<button class="btn btn-primary" @onclick="DoClearSelection">ClearSelection</button>
+<button class="btn btn-primary" @onclick="DoSelectAll">SelectAll</button>
 
 <XTerm @ref="_terminalRef"></XTerm>
 
@@ -63,6 +65,22 @@
         if(_terminalRef is not null)
         {
             await _terminalRef.Fit();
+        }
+    }
+
+    private async Task DoClearSelection()
+    {
+        if(_terminalRef is not null)
+        {
+            await _terminalRef.ClearSelection();
+        }
+    }
+
+    private async Task DoSelectAll()
+    {
+        if(_terminalRef is not null)
+        {
+            await _terminalRef.SelectAll();
         }
     }
 }

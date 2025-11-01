@@ -1,5 +1,4 @@
-﻿
-import { Terminal } from './js/xterm.esm.js';
+﻿import { Terminal } from './js/xterm.esm.js';
 import { FitAddon } from "./js/addon-fit.esm.js";
 import { WebLinksAddon } from './js/addon-web-links.esm.js';
 
@@ -54,6 +53,61 @@ export class XTermInteropHelper {
 
     focus() {
         this.#terminal.focus();
+    }
+
+    resize(cols, rows) {
+        // Defensive: ensure numbers
+        const c = Number(cols) || 0;
+        const r = Number(rows) || 0;
+        if (c > 0 && r > 0) {
+            this.#terminal.resize(c, r);
+            // After a manual resize, refit to ensure layout if using fit addon
+            try { this.#fitAddon.fit(); } catch {}
+        }
+    }
+
+    hasSelection() {
+        return this.#terminal.hasSelection();
+    }
+
+    getSelection() {
+        try {
+            // returns a string (empty string if none)
+            return this.#terminal.getSelection();
+        } catch {
+            return "";
+        }
+    }
+
+    getSelectionPosition() {
+        const pos = this.#terminal.getSelectionPosition();
+        if (!pos) return null;
+        // Normalize to a plain object (start/end with x/y) so it serializes cleanly
+        const normalizePos = p => p ? { x: p.x, y: p.y } : null;
+        return {
+            start: normalizePos(pos.start),
+            end: normalizePos(pos.end)
+        };
+    }
+
+    clearSelection() {
+        this.#terminal.clearSelection();
+    }
+
+    select(column, row, length) {
+        try {
+            const c = Number(column) || 0;
+            const r = Number(row) || 0;
+            const l = Number(length) || 0;
+            // xterm.js expects 1-based columns/rows in some versions; pass through as provided.
+            this.#terminal.select(c, r, l);
+        } catch {
+            // swallow
+        }
+    }
+
+    selectAll() {
+        this.#terminal.selectAll();
     }
 
     dispose() {

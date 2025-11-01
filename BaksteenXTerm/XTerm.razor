@@ -31,6 +31,19 @@
         public bool Meta { get; set; }
     }
 
+    // Selection position DTOs for JSON deserialization from JS interop
+    public class BufferCellPosition
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+    }
+
+    public class BufferRange
+    {
+        public BufferCellPosition? Start { get; set; }
+        public BufferCellPosition? End { get; set; }
+    }
+
     [JSInvokable]
     public async Task OnTerminalData(string data)
     {
@@ -137,6 +150,13 @@
         await xtermInteropHelper.InvokeVoidAsync("reset");
     }
 
+    // New: Resize via interop
+    public async Task Resize(int cols, int rows)
+    {
+        if (xtermInteropHelper is null) return;
+        await xtermInteropHelper.InvokeVoidAsync("resize", cols, rows);
+    }
+
     public async Task Blur()
     {
         if(xtermInteropHelper is null) return;
@@ -147,5 +167,44 @@
     {
         if(xtermInteropHelper is null) return;
         await xtermInteropHelper.InvokeVoidAsync("focus");
+    }
+
+    // Selection interop methods
+
+    public async Task<bool> HasSelection()
+    {
+        if (xtermInteropHelper is null) return false;
+        return await xtermInteropHelper.InvokeAsync<bool>("hasSelection");
+    }
+
+    public async Task<string?> GetSelection()
+    {
+        if (xtermInteropHelper is null) return null;
+        return await xtermInteropHelper.InvokeAsync<string>("getSelection");
+    }
+
+    public async Task<BufferRange?> GetSelectionPosition()
+    {
+        if (xtermInteropHelper is null) return null;
+        // returns an object with { start: { x, y }, end: { x, y } } or null
+        return await xtermInteropHelper.InvokeAsync<BufferRange?>("getSelectionPosition");
+    }
+
+    public async Task ClearSelection()
+    {
+        if (xtermInteropHelper is null) return;
+        await xtermInteropHelper.InvokeVoidAsync("clearSelection");
+    }
+
+    public async Task Select(int column, int row, int length)
+    {
+        if (xtermInteropHelper is null) return;
+        await xtermInteropHelper.InvokeVoidAsync("select", column, row, length);
+    }
+
+    public async Task SelectAll()
+    {
+        if (xtermInteropHelper is null) return;
+        await xtermInteropHelper.InvokeVoidAsync("selectAll");
     }
 }
