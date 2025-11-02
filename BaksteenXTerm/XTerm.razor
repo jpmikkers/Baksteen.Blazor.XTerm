@@ -20,8 +20,11 @@
     private IJSObjectReference? module;
     private IJSObjectReference? terminal;
     private IJSObjectReference? xtermInteropHelper;
+    private IAsyncDisposable? onKeySubscription;
+    private IAsyncDisposable? onDataSubscription;
+    private IAsyncDisposable? onSelectionChangeSubscription;
 
-    public class KeyEventPayload
+    public record class KeyEventPayload
     {
         public string Key { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
@@ -44,22 +47,52 @@
         public BufferCellPosition? End { get; set; }
     }
 
+    public record class SelectionChangePayload
+    {
+        public bool HasSelection { get; set; }
+        public string? Selection { get; set; }
+        public BufferRange? Position { get; set; }
+    }
+
     [JSInvokable]
     public async Task OnTerminalData(string data)
     {
-        if(terminal is not null)
-        {
-            await Write($"got data {data}");
-        }
+        await Write($"got data {data}");
     }
 
     [JSInvokable]
     public async Task OnTerminalKey(KeyEventPayload e)
     {
-        if(terminal is not null)
-        {
-            await Write($"got key {e}");
-        }
+        await Write($"got key {e}");
+    }
+
+    [JSInvokable]
+    public async Task OnSelectionChange(SelectionChangePayload payload)
+    {
+        // Example behavior: write a short notification to the terminal.
+        // You can replace this with custom handling or event dispatching as needed.
+        var msg = payload is null
+            ? "selection changed (null payload)"
+            : $"selection changed len={(payload.Selection?.Length ?? 0)}";
+        await Write(msg);
+    }
+
+    private async Task<IAsyncDisposable> RegisterOnKey()
+    {
+        if(xtermInteropHelper is null) throw new InvalidOperationException("XTerm interop helper is not initialized.");
+        return new JSDisposeHelper(await xtermInteropHelper.InvokeAsync<IJSObjectReference>("registerOnKey", _dotNetRef));
+    }
+
+    private async Task<IAsyncDisposable> RegisterOnData()
+    {
+        if(xtermInteropHelper is null) throw new InvalidOperationException("XTerm interop helper is not initialized.");
+        return new JSDisposeHelper(await xtermInteropHelper.InvokeAsync<IJSObjectReference>("registerOnData", _dotNetRef));
+    }
+
+    private async Task<IAsyncDisposable> RegisterOnSelectionChange()
+    {
+        if(xtermInteropHelper is null) throw new InvalidOperationException("XTerm interop helper is not initialized.");
+        return new JSDisposeHelper(await xtermInteropHelper.InvokeAsync<IJSObjectReference>("registerOnSelectionChange", _dotNetRef));
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
@@ -75,15 +108,54 @@
                 ./Components/Pages/JsCollocation2.razor.js (.NET 8 or later)
                 ./Pages/JsCollocation2.razor.js (.NET 7 or earlier)
             */
-        //module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./{PATH}/JsCollocation2.razor.js");
-        module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/BaksteenXTerm/XTerm.razor.js");
+    //module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./{PATH}/JsCollocation2.razor.js");
+    module = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/BaksteenXTerm/XTerm.razor.js");
             //terminal = await module.InvokeAsync<IJSObjectReference>("initTerminal", _terminalElementReference, _dotNetRef );
             xtermInteropHelper = await module.InvokeAsync<IJSObjectReference>("createXTermInteropHelper", _terminalElementReference);
+            //onKeySubscription = await RegisterOnKey();
+            onDataSubscription = await RegisterOnData();
+            onSelectionChangeSubscription = await RegisterOnSelectionChange();
         }
     }
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
+        if(onKeySubscription is not null)
+        {
+            try
+            {
+                await onKeySubscription.DisposeAsync();
+            }
+            catch(JSDisconnectedException)
+            {
+            }
+            onKeySubscription = null;
+        }
+
+        if(onDataSubscription is not null)
+        {
+            try
+            {
+                await onDataSubscription.DisposeAsync();
+            }
+            catch(JSDisconnectedException)
+            {
+            }
+            onDataSubscription = null;
+        }
+
+        if(onSelectionChangeSubscription is not null)
+        {
+            try
+            {
+                await onSelectionChangeSubscription.DisposeAsync();
+            }
+            catch(JSDisconnectedException)
+            {
+            }
+            onSelectionChangeSubscription = null;
+        }
+
         if(xtermInteropHelper is not null)
         {
             try

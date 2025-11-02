@@ -29,6 +29,15 @@ export class XTermInteropHelper {
             this.#fitAddon.fit();
         });
         this.#resizeObserver.observe(elementRef);
+
+    //    this.#terminal.onBell(() => {
+    //        alert("bell");
+
+    //        // Create a new Audio object with the sound file URL
+    //        //const sound = new Audio('./buzzer.mp3');
+    //        // Play the sound
+    //        //sound.play();
+    //    })
     }
 
     fit() {
@@ -114,71 +123,52 @@ export class XTermInteropHelper {
         this.#resizeObserver.disconnect();
         this.#terminal.dispose();
     }
+
+    registerOnKey(dotNetRef) {
+        const disposable = this.#terminal.onKey(e => {
+            const { key, domEvent } = e;
+
+            // Create a serializable object
+            const payload = {
+                key: key,
+                code: domEvent.code,
+                ctrl: domEvent.ctrlKey,
+                alt: domEvent.altKey,
+                shift: domEvent.shiftKey,
+                meta: domEvent.metaKey
+            };
+            dotNetRef.invokeMethodAsync("OnTerminalKey", payload);
+        });
+        return disposable;
+    }
+
+    registerOnData(dotNetRef) {
+        const disposable =  this.#terminal.onData(data => {
+            // Send the data back to .NET
+            dotNetRef.invokeMethodAsync("OnTerminalData", data);
+        });
+        return disposable;
+    }
+
+    registerOnSelectionChange(dotNetRef) {
+        const disposable = this.#terminal.onSelectionChange(() => {
+            try {
+                const payload = {
+                    hasSelection: this.hasSelection(),
+                    selection: this.getSelection(),
+                    position: this.getSelectionPosition()
+                };
+                dotNetRef.invokeMethodAsync("OnSelectionChange", payload);
+            } catch {
+                // swallow any errors to avoid breaking terminal behavior
+            }
+        });
+        return disposable;
+    }
 }
 
 export function createXTermInteropHelper(elementRef) {
     return new XTermInteropHelper(elementRef);
-}
-
-export function initTerminal(elementRef, dotNetRef) {
-
-    //alert("Initializing terminal...");
-    const terminal = new Terminal();
-    const fitAddon = new FitAddon();
-    terminal.loadAddon(fitAddon);
-    terminal.loadAddon(new WebLinksAddon());
-
-    //terminal.open(document.getElementById(containerId));
-    terminal.open(elementRef);
-    fitAddon.fit();
-
-    terminal.write('Welcome to xterm.js see: http://www.github.com/\r\n');
-
-    //    const { key, domEvent } = e;
-    //    terminal.write("Key pressed:" + key + "Event:" + domEvent);
-    // Example: intercept Ctrl+C
-    //    if (domEvent.ctrlKey && key === "c") {
-    //        console.log("Ctrl+C detected!");
-    //        domEvent.preventDefault();
-    //    }
-    //});
-
-    // Listen for key presses
-    //const disposable = terminal.onKey(e => {
-    //    const { key, domEvent } = e;
-    //    terminal.write("Key pressed:" + key + "Event:" + domEvent);
-    // Example: intercept Ctrl+C
-    //    if (domEvent.ctrlKey && key === "c") {
-    //        console.log("Ctrl+C detected!");
-    //        domEvent.preventDefault();
-    //    }
-    //});
-
-    // Listen for key presses
-    const disposable = terminal.onKey(e => {
-        const { key, domEvent } = e;
-
-        // Create a serializable object
-        const payload = {
-            key: key,
-            code: domEvent.code,
-            ctrl: domEvent.ctrlKey,
-            alt: domEvent.altKey,
-            shift: domEvent.shiftKey,
-            meta: domEvent.metaKey
-        };
-        dotNetRef.invokeMethodAsync("OnTerminalKey", payload);
-    });
-
-    terminal.onData(data => {
-        // Send the data back to .NET
-        dotNetRef.invokeMethodAsync("OnTerminalData", data);
-    });
-
-    // Later, unsubscribe if needed
-    // disposable.dispose();
-
-    return terminal;
 }
 
 export function getJsProperty(item,path) {
